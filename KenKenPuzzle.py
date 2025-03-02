@@ -2,76 +2,80 @@
 # Name:        KenKenPuzzle
 # Purpose:     A KenKen maker
 #
-# Author:      Dustin
+# Author:      Dustin Gehm
 #
 # Created:     21/11/2017
-# Copyright:   (c) Dustin 2017
+# Copyright:   (c) Dustin Gehm 2017
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 #!/usr/bin/env python
 
-import sys;
-import random;
-import pygame;
 import KenKen;
+import logging;
+import pygame;
+import random;
+import sys;
 
-def queryNewKenken():
-    #ask for a size and seed
-    gridSize = 0;
-    kkSeed = 0;
-    dataIn = input("Enter \"Size, Seed\" for new KenKen: ").split(',');
+ScriptName: str = sys.argv[0].removesuffix(".py");
 
-    try:
-        gridSize = int(dataIn[0].strip());
-    except:
-        gridSize = 3;
+logger: logging.Logger = logging.Logger(ScriptName);
 
-    try:
-        kkSeed = int(dataIn[1].strip());
-    except:
-        kkSeed = random.randrange(sys.maxsize);
+WindowSize: tuple[int, int] = (800, 600);
 
-    if gridSize < 3:
-        gridSize = 3;
-    elif gridSize > 9:
-        gridSize = 9;
 
-    return (gridSize, kkSeed);
+def query_kenken_props() -> tuple[int, int]:
+    # Ask for a size and seed
+    grid_size: int = 3;
+    seed: int = random.randrange(sys.maxsize);
 
-##    kk = KenKen.KenKen(kenkenSize, rngSeed);
-##    print("new KenKen key ", rngSeed);
-##    kk.generate();
+    temp_input: str = input("Enter a size for the KenKen(default is 3): ");
 
-def main():
-    kenkenSize = 3;
-    rngSeed = 0;
+    if temp_input:
+        try:
+            grid_size = int(temp_input.strip());
 
-    kenkenSize, rngSeed = queryNewKenken();
-##    rngSeed = 423885109;  #test
-##    rngSeed = 883658446;  #test2
-##    rngSeed = 310154206;  #size 5, index out of range error
-##    rngSeed = 1339593442; #size 5, 2x2 cage
-##    rngSeed = 517824060;  #size 5, zigzag cage
-##    rngSeed = 2065751865; #quick case
-    print("KenKen key ", rngSeed);
+            if grid_size < 3:
+                grid_size = 3;
+            elif grid_size > 9:
+                grid_size = 9;
+        except ValueError as e:
+            logger.error(f"{temp_input} is not a valid integer, defaulting to size of 3");
 
-    windim = (800, 600);
+            grid_size = 3;
 
-    kk = KenKen.KenKen(kenkenSize, rngSeed);
+    temp_input: str = input("Enter a seed for the KenKen(default is random): ");
+
+    if temp_input:
+        try:
+            seed = int(temp_input.strip());
+        except ValueError as e:
+            logger.error(f"{temp_input} is not a valid integer, defaulting to random seed");
+
+            seed = random.randrange(sys.maxsize);
+
+    return grid_size, seed;
+
+
+def main() -> None:
+    k_size, k_seed = query_kenken_props();
+    print("KenKen key ", k_seed);
+
+    kk: KenKen.KenKen = KenKen.KenKen(k_size, k_seed);
     kk.generate();
 
     pygame.display.init();
     pygame.font.init();
     pygame.display.set_caption("Esc -> Quit, S -> save, L -> load");
-    screen = pygame.display.set_mode(windim);
-    bigFont = pygame.font.SysFont("Arial", 30);
-    smallFont = pygame.font.SysFont("Arial", 15);
-    done = False;
+
+    screen: pygame.Surface = pygame.display.set_mode(WindowSize);
+    big_font: pygame.font.Font = pygame.font.SysFont("Arial", 30);
+    small_font: pygame.font.Font = pygame.font.SysFont("Arial", 15);
+    done: bool = False;
 
     while not done:
         screen.fill((255, 255, 255));
 
-        events = pygame.event.get();
+        events: list[pygame.event.Event] = pygame.event.get();
 
         for e in events:
             if e.type == pygame.QUIT:
@@ -80,24 +84,24 @@ def main():
                 if e.key == pygame.K_ESCAPE:
                     done = True;
                 elif e.key == pygame.K_l:
-                    kenkenSize, rngSeed = queryNewKenken();
-                    print("new KenKen key ", rngSeed);
+                    k_size, k_seed = query_kenken_props();
+                    print("new KenKen key ", k_seed);
 
-                    kk = KenKen.KenKen(kenkenSize, rngSeed);
+                    kk = KenKen.KenKen(k_size, k_seed);
                     kk.generate();
                 elif e.key == pygame.K_s:
                     #save kenken to png file
                     surf = pygame.Surface((kk.size * 100, kk.size * 100));
                     surf.fill((255, 255, 255));
-                    kk.markDirty();
-                    kk.draw(surf, 0, 0, bigFont, smallFont);
-                    pygame.image.save(surf, "KenKenS" + str(kk.size) + "_" + str(rngSeed) + ".png");
-                    kk.markDirty();
+                    kk.mark_dirty();
+                    kk.draw(surf, 0, 0, big_font, small_font);
+                    pygame.image.save(surf, "KenKenS" + str(kk.size) + "_" + str(k_seed) + ".png");
+                    kk.mark_dirty();
                     print("KenKen saved to image file");
 
-        kk.draw(screen, 0, 0, bigFont, smallFont, answers = True);
-        screen.blit(smallFont.render(str(kk.verify()), False, (0, 0, 0)), (windim[0] - smallFont.size(str(kk.verify()))[0], 0));
-        screen.blit(smallFont.render(str(rngSeed), False, (0, 0, 0)), (windim[0] - smallFont.size(str(rngSeed))[0], smallFont.get_height()));
+        kk.draw(screen, 0, 0, big_font, small_font, answers = True);
+        screen.blit(small_font.render(str(kk.verify_all()), False, (0, 0, 0)), (WindowSize[0] - small_font.size(str(kk.verify_all()))[0], 0));
+        screen.blit(small_font.render(str(k_seed), False, (0, 0, 0)), (WindowSize[0] - small_font.size(str(k_seed))[0], small_font.get_height()));
 
         pygame.display.flip();
 
