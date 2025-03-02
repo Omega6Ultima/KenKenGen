@@ -444,13 +444,13 @@ class KenKen:
             if len(cage.squares) > 1:
                 display_info += cage.operator;
 
-            screen.blit(small_font.render(display_info, False, (0, 0, 0)), (my_draw_x + (cell_width * cage.squares[cage.upperLeft][0]) + (half_cell_width / 2) - half_font_char_width, my_draw_y + (cell_width * cage.squares[cage.upperLeft][1]) + (half_cell_width / 2) - half_font_height));
+            screen.blit(small_font.render(display_info, True, (0, 0, 0)), (my_draw_x + (cell_width * cage.squares[cage.upperLeft][0]) + (half_cell_width / 2) - half_font_char_width, my_draw_y + (cell_width * cage.squares[cage.upperLeft][1]) + (half_cell_width / 2) - half_font_height));
 
         # Draw the numbers
         if answers:
             for r in range(len(self.grid)):
                 for c in range(len(self.grid[r])):
-                    screen.blit(big_font.render(str(self.grid[r][c]), False, (0, 0, 0)), (my_draw_x + (cell_width * (r + 0)) + half_cell_width - half_font_char_width, my_draw_y + (cell_width * (c + 0)) + half_cell_width - half_font_height));
+                    screen.blit(big_font.render(str(self.grid[r][c]), True, (0, 0, 0)), (my_draw_x + (cell_width * (r + 0)) + half_cell_width - half_font_char_width, my_draw_y + (cell_width * (c + 0)) + half_cell_width - half_font_height));
 
 if __name__ == '__main__':
     # Module test

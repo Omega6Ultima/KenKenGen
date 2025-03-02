@@ -20,7 +20,16 @@ ScriptName: str = sys.argv[0].removesuffix(".py");
 
 logger: logging.Logger = logging.Logger(ScriptName);
 
-WindowSize: tuple[int, int] = (800, 600);
+WindowSize: tuple[int, int] = (1000, 600);
+
+# On-screen instructions
+Instructions: list[str] = [
+    "S -> Saves KenKen puzzle to black and white image",
+    "K -> Saves KenKen answer key to color image",
+    "L -> Prompts for new size and seed",
+];
+
+instructions_just: int = len(max(Instructions, key=len));
 
 
 def query_kenken_props() -> tuple[int, int]:
@@ -65,7 +74,7 @@ def main() -> None:
 
     pygame.display.init();
     pygame.font.init();
-    pygame.display.set_caption("Esc -> Quit, S -> save, L -> load");
+    pygame.display.set_caption("KenKen Generator");
 
     screen: pygame.Surface = pygame.display.set_mode(WindowSize);
     big_font: pygame.font.Font = pygame.font.SysFont("Arial", 30);
@@ -95,13 +104,31 @@ def main() -> None:
                     surf.fill((255, 255, 255));
                     kk.mark_dirty();
                     kk.draw(surf, 0, 0, big_font, small_font);
-                    pygame.image.save(surf, "KenKenS" + str(kk.size) + "_" + str(k_seed) + ".png");
+                    pygame.image.save(surf, f"KenKen_sz{str(kk.size)}_{str(k_seed)}.png");
                     kk.mark_dirty();
                     print("KenKen saved to image file");
+                elif e.key == pygame.K_k:
+                    #save kenken answer key to png file
+                    surf = pygame.Surface((kk.size * 100, kk.size * 100));
+                    surf.fill((255, 255, 255));
+                    kk.mark_dirty();
+                    kk.draw(surf, 0, 0, big_font, small_font, answers=True);
+                    pygame.image.save(surf, f"KenKen_sz{str(kk.size)}_{str(k_seed)}_answers.png");
+                    kk.mark_dirty();
+                    print("KenKen answer key saved to image file");
 
         kk.draw(screen, 0, 0, big_font, small_font, answers = True);
-        screen.blit(small_font.render(str(kk.verify_all()), False, (0, 0, 0)), (WindowSize[0] - small_font.size(str(kk.verify_all()))[0], 0));
-        screen.blit(small_font.render(str(k_seed), False, (0, 0, 0)), (WindowSize[0] - small_font.size(str(k_seed))[0], small_font.get_height()));
+
+        for i, info in enumerate([
+            f"Verified: {kk.verify_all()}",
+            f"Seed: {k_seed}",
+                ]):
+            screen.blit(small_font.render(info, True, (0, 0, 0)), (WindowSize[0] - small_font.size(info)[0] - 10, small_font.get_height() * i));
+
+        for i, line in enumerate(Instructions):
+            line = line.ljust(instructions_just);
+
+            screen.blit(small_font.render(line, True, (0, 0, 0)), (WindowSize[0] - small_font.size(line)[0] - 10, (small_font.get_height() * 1.1 * (i + 5))));
 
         pygame.display.flip();
 
